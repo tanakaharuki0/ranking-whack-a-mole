@@ -21,37 +21,37 @@ export default function Home() {
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
 
   const fetchScores = useCallback(async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/scores`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data: unknown = await response.json();
-
-      // 型チェックを実施
-      if (Array.isArray(data) && data.every(item =>
-        typeof item === 'object' &&
-        item !== null &&
-        'nickname' in item &&
-        typeof (item as any).nickname === 'string' &&
-        'score' in item &&
-        typeof (item as any).score === 'number'
-      )) {
-        setScores(data as Score[]);
-      } else {
-        throw new Error('Invalid data format received.');
-      }
-    } catch (e) {
-      if (e instanceof Error) {
-        setError(e.message);
-      } else {
-        setError('An unknown error occurred.');
-      }
-    } finally {
-      setLoading(false);
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/scores`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  }, [API_BASE_URL]);
+
+    const data: unknown = await response.json();
+
+    // Score[] かどうかチェック
+    if (Array.isArray(data) && data.every(item =>
+          typeof item === 'object' &&
+          item !== null &&
+          'nickname' in item &&
+          typeof (item as { nickname?: unknown }).nickname === 'string' &&
+          'score' in item &&
+          typeof (item as { score?: unknown }).score === 'number'
+      )) {
+      setScores(data as Score[]);
+    } else {
+      throw new Error('Invalid data format received.');
+    }
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      setError(e.message);
+    } else {
+      setError('An unknown error occurred.');
+    }
+  } finally {
+    setLoading(false);
+  }
+}, [API_BASE_URL]);
 
   useEffect(() => {
     fetchScores();
@@ -83,7 +83,7 @@ export default function Home() {
       setNewNickname('');
       setNewScore('');
       fetchScores();
-    } catch (e) {
+    } catch (e:unknown) {
       if (e instanceof Error) {
         setError(e.message);
       } else {
