@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface Score {
   nickname: string;
@@ -20,35 +20,54 @@ export default function Home() {
   // Vercelにデプロイする際、この環境変数を設定します
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
 
-  const fetchScores = async () => {
+  const fetchScores = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/scores`); // 環境変数を使用
+      const response = await fetch(`${API_BASE_URL}/api/scores`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data: Score[] = await response.json();
-      setScores(data);
-    } catch (e: any) {
-      setError(e.message);
+
+      const data: unknown = await response.json();
+
+      // 型チェックを実施
+      if (Array.isArray(data) && data.every(item =>
+        typeof item === 'object' &&
+        item !== null &&
+        'nickname' in item &&
+        typeof (item as any).nickname === 'string' &&
+        'score' in item &&
+        typeof (item as any).score === 'number'
+      )) {
+        setScores(data as Score[]);
+      } else {
+        throw new Error('Invalid data format received.');
+      }
+    } catch (e) {
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError('An unknown error occurred.');
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [API_BASE_URL]);
 
   useEffect(() => {
     fetchScores();
-  }, []);
+  }, [fetchScores]);
 
   const handleSubmitScore = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null); // エラーをリセット
+    setError(null);
+
     try {
       const scoreNum = parseInt(newScore, 10);
       if (isNaN(scoreNum)) {
         throw new Error("Score must be a number.");
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/score`, { // 環境変数を使用
+      const response = await fetch(`${API_BASE_URL}/api/score`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -63,10 +82,13 @@ export default function Home() {
 
       setNewNickname('');
       setNewScore('');
-      // スコア保存後、ランキングを再フェッチ
       fetchScores();
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError('An unknown error occurred.');
+      }
     }
   };
 
@@ -80,8 +102,8 @@ export default function Home() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-xl text-red-600">Error: {error}</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
+        <p className="text-xl text-red-600 mb-2">Error: {error}</p>
         <p className="text-gray-500">Please ensure the Python API server is running at {API_BASE_URL}</p>
       </div>
     );
@@ -135,29 +157,17 @@ export default function Home() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Rank
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Nickname
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Score
-                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nickname</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {scores.map((score, index) => (
                 <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    #{index + 1}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                    {score.nickname}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                    {score.score}
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{index + 1}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{score.nickname}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{score.score}</td>
                 </tr>
               ))}
             </tbody>
