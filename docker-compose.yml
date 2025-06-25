@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: rankingdb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432" # ホストの5432ポートにDBポートを公開
+    volumes:
+      - db_data:/var/lib/postgresql/data # データ永続化のためにボリュームを使用
+
+  api:
+    build:
+      context: ./python-api-server
+      dockerfile: Dockerfile # カレントディレクトリのDockerfileを使用
+    restart: always
+    ports:
+      - "5000:5000" # ホストの5000ポートにAPIサーバーを公開
+    environment:
+      # Docker Composeネットワーク内のDBサービス名とポートを使用
+      DATABASE_URL: "postgresql://user:password@db:5432/rankingdb?sslmode=disable"
+    depends_on:
+      - db # dbサービスが起動してからapiサービスを起動
+    # ホットリロードのためにボリュームをマウントする開発時設定
+    volumes:
+      - ./python-api-server/api_server.py:/app/api_server.py # APIサーバーに必要なPythonライブラリを記述
+      - ./python-api-server/requirements.txt:/app/requirements.txt
+    working_dir: /app
+
+volumes:
+  db_data: # データベースのデータを保存するための名前付きボリューム
