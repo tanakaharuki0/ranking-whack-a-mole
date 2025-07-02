@@ -7,7 +7,9 @@ from dotenv import load_dotenv
 load_dotenv() # .env ファイルから環境変数をロード
 
 app = Flask(__name__)
-CORS(app) # CORSを有効にする
+
+# CORSを有効にする。OPTIONSメソッドとDELETEメソッドを許可するように設定を強化
+CORS(app, resources={r"/api/*": {"origins": "*", "methods": ["GET", "POST", "DELETE", "OPTIONS"]}}, supports_credentials=True)
 
 # データベース接続情報の取得
 DATABASE_URL = os.environ.get('DATABASE_URL')
@@ -88,6 +90,37 @@ def add_score():
     finally:
         if conn:
             conn.close()
+
+# ニックネームを指定してスコアを削除するエンドポイント
+@app.route('/api/score/<nickname>', methods=['DELETE'])
+def delete_score(nickname):
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        # 指定されたニックネームのすべてのスコアを削除
+        cursor.execute("DELETE FROM scores WHERE nickname = %s", (nickname,))
+        conn.commit()
+        if cursor.rowcount > 0:
+            print(f"Deleted scores for nickname: '{nickname}'")
+            return jsonify({"message": f"Scores for nickname '{nickname}' deleted successfully."}), 200
+        else:
+            print(f"No scores found for nickname: '{nickname}'." ), 404
+            return jsonify({"error": f"No scores found for nickname '{nickname}'."}), 404
+    except Exception as e:
+        print(f"Error deleting score: {e}")
+        return jsonify({"error": "Failed to delete score."}), 500
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/api/score/<nickname>', methods=['OPTIONS'])
+def options_score(nickname):
+    response = app.make_default_options_response()
+    response.headers["Access-Control-Allow-Methods"] = "GET,POST,DELETE,OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    return response
+
 
 if __name__ == '__main__':
     init_db() # サーバー起動時にデータベースを初期化

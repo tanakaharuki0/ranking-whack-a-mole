@@ -17,41 +17,41 @@ export default function Home() {
   const [newScore, setNewScore] = useState<string>(''); // 入力は文字列として受け取る
 
   // APIサーバーのURLを環境変数から取得
-  // Vercelにデプロイする際、この環境変数を設定します
+  // Vercelにデプロイする際、この環境変数を設定
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
 
   const fetchScores = useCallback(async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/scores`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/scores`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-    const data: unknown = await response.json();
+      const data: unknown = await response.json();
 
-    // Score[] かどうかチェック
-    if (Array.isArray(data) && data.every(item =>
-          typeof item === 'object' &&
-          item !== null &&
-          'nickname' in item &&
-          typeof (item as { nickname?: unknown }).nickname === 'string' &&
-          'score' in item &&
-          typeof (item as { score?: unknown }).score === 'number'
-      )) {
-      setScores(data as Score[]);
-    } else {
-      throw new Error('Invalid data format received.');
+      // Score[] かどうかチェック
+      if (Array.isArray(data) && data.every(item =>
+            typeof item === 'object' &&
+            item !== null &&
+            'nickname' in item &&
+            typeof (item as { nickname?: unknown }).nickname === 'string' &&
+            'score' in item &&
+            typeof (item as { score?: unknown }).score === 'number'
+        )) {
+        setScores(data as Score[]);
+      } else {
+        throw new Error('Invalid data format received.');
+      }
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError('An unknown error occurred.');
+      }
+    } finally {
+      setLoading(false);
     }
-  } catch (e: unknown) {
-    if (e instanceof Error) {
-      setError(e.message);
-    } else {
-      setError('An unknown error occurred.');
-    }
-  } finally {
-    setLoading(false);
-  }
-}, [API_BASE_URL]);
+  }, [API_BASE_URL]);
 
   useEffect(() => {
     fetchScores();
@@ -84,6 +84,38 @@ export default function Home() {
       setNewScore('');
       fetchScores();
     } catch (e:unknown) {
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError('An unknown error occurred.');
+      }
+    }
+  };
+
+  // 削除機能の追加
+  const handleDeleteScore = async (nicknameToDelete: string) => {
+    setError(null);
+    if (!confirm(`Are you sure you want to delete all scores for ${nicknameToDelete}?`)) {
+      return; // ユーザーがキャンセルした場合
+    }
+
+    try {
+      console.log(nicknameToDelete)
+      const response = await fetch(`${API_BASE_URL}/api/score/${nicknameToDelete}`, {
+        method: 'DELETE', // DELETEメソッドを使用
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      });
+      console.log("1")
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Failed to delete score: ${errorData.error || response.statusText}`);
+      }
+      console.log("2")
+      // 削除成功後、ランキングを再取得してUIを更新
+      fetchScores();
+    } catch (e: unknown) {
       if (e instanceof Error) {
         setError(e.message);
       } else {
@@ -160,6 +192,7 @@ export default function Home() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nickname</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>{/* 削除ボタン用の列を追加 */}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -168,6 +201,14 @@ export default function Home() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{index + 1}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{score.nickname}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{score.score}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button
+                      onClick={() => handleDeleteScore(score.nickname)} // 削除ボタンのクリックイベント
+                      className="text-red-600 hover:text-red-900 px-3 py-1 rounded-md border border-red-600 hover:border-red-900"
+                    >
+                      Delete
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
