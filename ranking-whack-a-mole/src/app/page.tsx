@@ -13,8 +13,8 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   // 新しいスコア追加用のstate
-  const [newNickname, setNewNickname] = useState<string>('');
-  const [newScore, setNewScore] = useState<string>(''); // 入力は文字列として受け取る
+  // const [newNickname, setNewNickname] = useState<string>('');
+  // const [newScore, setNewScore] = useState<string>(''); // 入力は文字列として受け取る
 
   // APIサーバーのURLを環境変数から取得
   // Vercelにデプロイする際、この環境変数を設定
@@ -57,72 +57,70 @@ export default function Home() {
     fetchScores();
   }, [fetchScores]);
 
-  const handleSubmitScore = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  // const handleSubmitScore = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setError(null);
 
-    try {
-      const scoreNum = parseInt(newScore, 10);
-      if (isNaN(scoreNum)) {
-        throw new Error("Score must be a number.");
-      }
+  //   try {
+  //     const scoreNum = parseInt(newScore, 10);
+  //     if (isNaN(scoreNum)) {
+  //       throw new Error("Score must be a number.");
+  //     }
 
-      const response = await fetch(`${API_BASE_URL}/api/score`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ nickname: newNickname, score: scoreNum }),
-      });
+  //     const response = await fetch(`${API_BASE_URL}/api/score`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({ nickname: newNickname, score: scoreNum }),
+  //     });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Failed to save score: ${errorData.error || response.statusText}`);
-      }
+  //     if (!response.ok) {
+  //       const errorData = await response.json();
+  //       throw new Error(`Failed to save score: ${errorData.error || response.statusText}`);
+  //     }
 
-      setNewNickname('');
-      setNewScore('');
-      fetchScores();
-    } catch (e:unknown) {
-      if (e instanceof Error) {
-        setError(e.message);
-      } else {
-        setError('An unknown error occurred.');
-      }
-    }
-  };
+  //     setNewNickname('');
+  //     setNewScore('');
+  //     fetchScores();
+  //   } catch (e:unknown) {
+  //     if (e instanceof Error) {
+  //       setError(e.message);
+  //     } else {
+  //       setError('An unknown error occurred.');
+  //     }
+  //   }
+  // };
 
-  // 削除機能の追加
-  const handleDeleteScore = async (nicknameToDelete: string) => {
-    setError(null);
-    if (!confirm(`Are you sure you want to delete all scores for ${nicknameToDelete}?`)) {
-      return; // ユーザーがキャンセルした場合
-    }
+  // // 削除機能の追加
+  // const handleDeleteScore = async (nicknameToDelete: string) => {
+  //   setError(null);
+  //   if (!confirm(`Are you sure you want to delete all scores for ${nicknameToDelete}?`)) {
+  //     return; // ユーザーがキャンセルした場合
+  //   }
 
-    try {
-      console.log(nicknameToDelete)
-      const response = await fetch(`${API_BASE_URL}/api/score/${nicknameToDelete}`, {
-        method: 'DELETE', // DELETEメソッドを使用
-        headers: {
-          'Content-Type': 'application/json'
-        },
-      });
-      console.log("1")
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Failed to delete score: ${errorData.error || response.statusText}`);
-      }
-      console.log("2")
-      // 削除成功後、ランキングを再取得してUIを更新
-      fetchScores();
-    } catch (e: unknown) {
-      if (e instanceof Error) {
-        setError(e.message);
-      } else {
-        setError('An unknown error occurred.');
-      }
-    }
-  };
+  //   try {
+  //     console.log(nicknameToDelete)
+  //     const response = await fetch(`${API_BASE_URL}/api/score/${nicknameToDelete}`, {
+  //       method: 'DELETE', // DELETEメソッドを使用
+  //       headers: {
+  //         'Content-Type': 'application/json'
+  //       },
+  //     });
+  //     if (!response.ok) {
+  //       const errorData = await response.json();
+  //       throw new Error(`Failed to delete score: ${errorData.error || response.statusText}`);
+  //     }
+  //     // 削除成功後、ランキングを再取得してUIを更新
+  //     fetchScores();
+  //   } catch (e: unknown) {
+  //     if (e instanceof Error) {
+  //       setError(e.message);
+  //     } else {
+  //       setError('An unknown error occurred.');
+  //     }
+  //   }
+  // };
 
   if (loading) {
     return (
