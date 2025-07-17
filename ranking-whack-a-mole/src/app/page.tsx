@@ -55,18 +55,19 @@ export default function Home() {
 
   useEffect(() => {
     fetchScores();
-  }, []);
+  }, [fetchScores]);
 
   const handleSubmitScore = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null); // エラーをリセット
+    setError(null);
+
     try {
       const scoreNum = parseInt(newScore, 10);
       if (isNaN(scoreNum)) {
         throw new Error("Score must be a number.");
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/score`, { // 環境変数を使用
+      const response = await fetch(`${API_BASE_URL}/api/score`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -81,10 +82,13 @@ export default function Home() {
 
       setNewNickname('');
       setNewScore('');
-      // スコア保存後、ランキングを再フェッチ
       fetchScores();
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e:unknown) {
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError('An unknown error occurred.');
+      }
     }
   };
 
@@ -130,8 +134,8 @@ export default function Home() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-xl text-red-600">Error: {error}</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
+        <p className="text-xl text-red-600 mb-2">Error: {error}</p>
         <p className="text-gray-500">Please ensure the Python API server is running at {API_BASE_URL}</p>
       </div>
     );
