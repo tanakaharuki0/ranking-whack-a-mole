@@ -148,7 +148,7 @@ export default function Home() {
       </h1>
 
       {/* スコア入力フォーム */}
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6 mb-8">
+      {/* <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6 mb-8">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Add Your Score</h2>
         <form onSubmit={handleSubmitScore} className="space-y-4">
           <div>
@@ -180,7 +180,7 @@ export default function Home() {
             Submit Score
           </button>
         </form>
-      </div>
+      </div> */}
 
       {scores.length === 0 ? (
         <p className="text-2xl text-gray-700 mt-8">No scores yet. Play a game!</p>
@@ -192,7 +192,7 @@ export default function Home() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nickname</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>{/* 削除ボタン用の列を追加 */}
+                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>削除ボタン用の列を追加 */}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -201,14 +201,14 @@ export default function Home() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{index + 1}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{score.nickname}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{score.score}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  {/* <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
                       onClick={() => handleDeleteScore(score.nickname)} // 削除ボタンのクリックイベント
                       className="text-red-600 hover:text-red-900 px-3 py-1 rounded-md border border-red-600 hover:border-red-900"
                     >
                       Delete
                     </button>
-                  </td>
+                  </td> */}
                 </tr>
               ))}
             </tbody>
